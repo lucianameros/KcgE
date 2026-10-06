@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Player</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .video-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+    }
+
+    #main-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    #play-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    #play-overlay:hover { background: rgba(0,0,0,0.4); }
+    #play-overlay.hidden { display: none; }
+
+    .play-circle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 2.5px solid rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, background 0.2s;
+    }
+    #play-overlay:hover .play-circle {
+      transform: scale(1.1);
+      background: rgba(255,255,255,0.26);
+    }
+    .triangle {
+      width: 0; height: 0;
+      border-top: 22px solid transparent;
+      border-bottom: 22px solid transparent;
+      border-left: 38px solid #fff;
+      margin-left: 8px;
+    }
+    .play-label {
+      margin-top: 20px;
+      font-size: 15px;
+      color: rgba(255,255,255,0.8);
+      letter-spacing: 0.06em;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<div class="video-container">
+  <video
+    id="main-video"
+    src="https://cdn.slicedrv.com/H1oEQXJE1.mp4"
+    controls
+    controlsList="nodownload"
+    preload="metadata"
+    playsinline
+  ></video>
+
+  <div id="play-overlay" onclick="startPlayer()">
+    <div class="play-circle">
+      <div class="triangle"></div>
+    </div>
+    <span class="play-label">Putar Video</span>
+  </div>
+</div>
+
+<script>
+  var ADS_URL = 'https://t.co/GBJ1PkPlfc'; // ✏️ ganti ini
+
+  var video   = document.getElementById('main-video');
+  var overlay = document.getElementById('play-overlay');
+
+  // Cek apakah user sudah pernah lihat iklan (pakai sessionStorage, reset tiap tutup tab)
+  var adsShown = sessionStorage.getItem('adsShown') === '1';
+
+  // Kalau balik dari iklan (ada flag 'returning'), langsung play video
+  var returning = sessionStorage.getItem('returning') === '1';
+
+  function startPlayer() {
+    if (!adsShown) {
+      // Tandai bahwa kita sedang redirect ke iklan
+      sessionStorage.setItem('adsShown', '1');
+      sessionStorage.setItem('returning', '1');
+
+      // Push state palsu dulu supaya tombol back di HP bisa deteksi
+      history.pushState({ ads: true }, '', window.location.href);
+
+      // Redirect ke halaman iklan di tab yang sama
+      window.location.href = ADS_URL;
+    } else {
+      // Sudah pernah lihat iklan, langsung play
+      playVideo();
+    }
+  }
+
+  function playVideo() {
+    overlay.classList.add('hidden');
+    video.play();
+  }
+
+  // Deteksi tombol BACK di HP → popstate terpanggil saat balik ke halaman ini
+  window.addEventListener('popstate', function(e) {
+    playVideo();
+  });
+
+  // Kalau halaman ini di-load ulang setelah balik dari iklan
+  if (returning) {
+    sessionStorage.removeItem('returning');
+    // Tunggu sebentar sampai video siap
+    window.addEventListener('load', function() {
+      setTimeout(playVideo, 300);
+    });
+    // Fallback kalau load sudah lewat
+    if (document.readyState === 'complete') {
+      setTimeout(playVideo, 300);
+    }
+  }
+
+  video.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+</script>
+
+</body>
+<!-- Histats.com  START  (aync)-->
+<script type="text/javascript">var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,4586115,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = ('//s10.histats.com/js15_as.js');
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();</script>
+<noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?4586115&101" alt="" border="0"></a></noscript>
+<!-- Histats.com  END  -->
+
+</html>
